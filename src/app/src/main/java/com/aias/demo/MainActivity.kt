@@ -1,25 +1,27 @@
 package com.aias.demo
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.aias.aias_client.AiasClient
 
 class MainActivity : AppCompatActivity() {
+    var aias : AiasClient? = null;
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val intent = Intent()
-        intent.setClassName("com.aias.aias", "com.aias.aias.SignActivity");
+        aias = AiasClient(this)
+        aias?.startFBSSignActivity()
+    }
 
-        intent.action = Intent.ACTION_SEND
-        intent.type = "text/plain"
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
 
-        intent.putExtra(Intent.EXTRA_TEXT, "hoge")
-        startActivity(intent)
-
-        val message = intent.getStringExtra("message")
-        Toast.makeText(this, message, Toast.LENGTH_SHORT)
+        aias?.onActivityResult(requestCode, resultCode, data)
+        Toast.makeText(this, aias?.fairBlindSignature, Toast.LENGTH_SHORT).show()
     }
 }
