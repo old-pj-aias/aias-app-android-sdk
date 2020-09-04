@@ -5,7 +5,6 @@ import android.content.Intent
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import com.fasterxml.jackson.databind.ObjectMapper
-import java.net.URLEncoder.encode
 import java.nio.charset.StandardCharsets
 import java.security.KeyPairGenerator
 import java.security.KeyStore
@@ -27,7 +26,7 @@ class AiasClient (activity: Activity){
     init {
         keyStore.load(null);
 
-//        if (!keyStore.containsAlias(KEY_PROVIDER)) {
+        if (!keyStore.containsAlias(KEY_PROVIDER)) {
             val keyPairGenerator = KeyPairGenerator.getInstance(
                 KeyProperties.KEY_ALGORITHM_RSA, KEY_PROVIDER
             )
@@ -43,11 +42,11 @@ class AiasClient (activity: Activity){
 
             keyPairGenerator.initialize(parameterSpec)
             val kp = keyPairGenerator.generateKeyPair()
-//        }
+        }
     }
 
     fun startFBSSignActivity() {
-        val pubkey : PublicKey = keyStore.getCertificate(KEY_PROVIDER).publicKey
+        val pubkey : PublicKey = keyStore.getCertificate("hoge").publicKey
 
         val base64Encoder = Base64.getEncoder()
         val keySpec = PKCS8EncodedKeySpec(pubkey.encoded)
@@ -87,21 +86,27 @@ class AiasClient (activity: Activity){
         val base64Encoder = Base64.getEncoder()
 
         val signed = Signed(data, token)
-        val signedData = base64Encoder.encode(data.toByteArray()).toString(StandardCharsets.UTF_8) + "." + token.toString()
+        val signData1 = base64Encoder.encode(data.toByteArray()).toString(StandardCharsets.UTF_8) + "." + token.toString()
+        val signData2 = signData1.toByteArray(StandardCharsets.UTF_8)
 
         val entry = keyStore.getEntry("hoge", null)
 
         val s = Signature.getInstance("SHA256withRSA")
-
-        val signData = signedData.toByteArray(StandardCharsets.UTF_8)
         s.initSign((entry as KeyStore.PrivateKeyEntry).privateKey)
-        s.update(signData)
+        s.update(signData2)
 
         val signatureData = s.sign()
         val signature = base64Encoder.encode(signatureData).toString(StandardCharsets.UTF_8)
 
         val data = Data(signed, fairBlindSignature, publicKey, signature)
         val result = mapper.writeValueAsString(data)
+
+        val signature2 = Signature.getInstance("SHA256withRSA")
+        val pubkey : PublicKey = keyStore.getCertificate("hoge").publicKey
+
+        signature2.initVerify(pubkey)
+        signature2.update(signData2);
+        val r = signature2.verify(signatureData);
 
         return result;
     }
