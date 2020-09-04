@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
+import android.text.Editable
 import com.fasterxml.jackson.databind.ObjectMapper
 import java.nio.charset.StandardCharsets
 import java.security.KeyPairGenerator
@@ -100,6 +101,6 @@ class AiasClient (activity: Activity){
 
         val data = Data(signed, fairBlindSignature, publicKey, signature)
 
-        return mapper.writeValueAsString(data);
+        return mapper.writeValueAsString(data)
     }
 }
