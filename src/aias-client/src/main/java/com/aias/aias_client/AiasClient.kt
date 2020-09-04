@@ -99,15 +99,7 @@ class AiasClient (activity: Activity){
         val signature = base64Encoder.encode(signatureData).toString(StandardCharsets.UTF_8)
 
         val data = Data(signed, fairBlindSignature, publicKey, signature)
-        val result = mapper.writeValueAsString(data)
 
-        val signature2 = Signature.getInstance("SHA256withRSA")
-        val pubkey : PublicKey = keyStore.getCertificate("hoge").publicKey
-
-        signature2.initVerify(pubkey)
-        signature2.update(signData2);
-        val r = signature2.verify(signatureData);
-
-        return result;
+        return mapper.writeValueAsString(data);
     }
 }
