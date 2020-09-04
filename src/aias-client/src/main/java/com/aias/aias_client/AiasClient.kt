@@ -69,21 +69,22 @@ class AiasClient (activity: Activity){
     fun generateAuth (data: String, token: Int) : String {
         val mapper = ObjectMapper()
 
-        val signed = signed(data, token)
-        val signedStr = mapper.writeValueAsString(signed).toByteArray(StandardCharsets.UTF_8);
+        val base64Encoder = Base64.getEncoder()
+
+        val signed = Signed(data, token)
+        val signedData = base64Encoder.encode(data.toByteArray()).toString(StandardCharsets.UTF_8) + "." + token.toString()
 
         val entry = keyStore.getEntry("hoge", null)
 
         val s = Signature.getInstance("SHA256withRSA")
         s.initSign((entry as KeyStore.PrivateKeyEntry).privateKey)
-        s.update(signedStr)
+        s.update(signedData.toByteArray(StandardCharsets.UTF_8))
 
-        val signature = s.sign()
-        val result = Base64.getEncoder().encode(signature).toString(Charsets.UTF_8)
+        val signature = base64Encoder.encode(s.sign()).toString(Charsets.UTF_8)
 
-        val data = Data(signed, fairBlindSignature, publicKey, result)
-        val dataStr = mapper.writeValueAsString(data)
+        val data = Data(signed, fairBlindSignature, publicKey, signature)
+        val result = mapper.writeValueAsString(data)
 
-        return dataStr;
+        return result;
     }
 }
