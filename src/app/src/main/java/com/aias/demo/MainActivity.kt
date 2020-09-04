@@ -11,6 +11,7 @@ import com.aias.aias_client.AiasClient
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.kittinunf.fuel.Fuel
+import java.io.File.separator
 import kotlin.concurrent.thread
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
@@ -22,6 +23,22 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
         aias = AiasClient(this)
         aias?.startFBSSignActivity()
+
+        thread {
+            val (_, getResponse, getResult) = Fuel.get("http://10.0.2.2:5000/get")
+                .response()
+
+            val getResponseStr = String(getResponse.data)
+
+            val mapper = jacksonObjectMapper()
+            val responseJson = mapper.readValue<Messages>(getResponseStr)
+            val value = responseJson.data.joinToString (separator = "\n")
+
+            runOnUiThread {
+                val text = findViewById<TextView>(R.id.body)
+                text.text = value
+            }
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -35,7 +52,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         val text = findViewById<EditText>(R.id.text).text.toString()
 
         thread {
-            val (_, tokenResponse, tokenResult) = Fuel.post("http://192.168.0.24:5000/token")
+            val (_, tokenResponse, tokenResult) = Fuel.post("http://10.0.2.2:5000/token")
                 .response()
 
             val tokenResponseStr = String(tokenResponse.data)
@@ -49,20 +66,25 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
             val auth = aias?.generateAuth(text, postResponseJson.random).toString()
 
-            val (_, postResponse, postResult) = Fuel.post("http://192.168.0.24:5000/post")
+            val (_, postResponse, postResult) = Fuel.post("http://10.0.2.2:5000/post")
                 .header(cookieHeader)
                 .body(auth)
                 .response()
 
             val postResponseStr = String(postResponse.data)
 
-            val (_, getResponse, getResult) = Fuel.get("http://192.168.0.24:5000/get")
+            val (_, getResponse, getResult) = Fuel.get("http://10.0.2.2:5000/get")
                 .header(cookieHeader)
                 .response()
 
+            val getResponseStr = String(getResponse.data)
+            val responseJson = mapper.readValue<Messages>(getResponseStr)
+            val value = responseJson.data.joinToString (separator = "\n")
+
             runOnUiThread {
                 val text = findViewById<TextView>(R.id.body)
-                text.text = String(getResponse.data)
+
+                text.text = value
             }
         }
     }
