@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.aias.aias_client.AiasClient
@@ -48,15 +49,20 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
             val auth = aias?.generateAuth(text, postResponseJson.random).toString()
 
-            val (_, postResponse, postResult) = Fuel.post("http://192.168.0.24:5000/verify")
+            val (_, postResponse, postResult) = Fuel.post("http://192.168.0.24:5000/post")
                 .header(cookieHeader)
                 .body(auth)
                 .response()
 
             val postResponseStr = String(postResponse.data)
 
+            val (_, getResponse, getResult) = Fuel.get("http://192.168.0.24:5000/get")
+                .header(cookieHeader)
+                .response()
+
             runOnUiThread {
-                Toast.makeText(this, postResponseStr, Toast.LENGTH_LONG).show()
+                val text = findViewById<TextView>(R.id.body)
+                text.text = String(getResponse.data)
             }
         }
     }
